@@ -17,7 +17,8 @@
               simple:
                 id: simple-caf0
                 expression: ${header.CamelFileName}
-            idempotentRepository: IdempotentRepositoryBean
+            idempotentRepository: messageIdRepository
+            skipDuplicate: 'true'
             steps:
               - to:
                   id: to-2ee6
@@ -26,5 +27,19 @@
                     loggerName: Logger
 - beans:
     - constructors: {}
-      name: IdempotentRepositoryBean
-      type: org.apache.camel.support.processor.idempotent.MemoryIdempotentRepository
+      name: dataSource
+      properties:
+        driverClassName: com.mysql.jdbc.Driver
+        url: >-
+          jdbc:mysql://localhost:3306/karavan_demo?useSSL=false&characterEncoding=UTF-8
+        username: root
+        password: root1234
+      type: org.springframework.jdbc.datasource.DriverManagerDataSource
+    - constructors:
+        '0': '#dataSource'
+      name: messageIdRepository
+      properties:
+        createString: >-
+          CREATE TABLE CAMEL_MESSAGEPROCESSED (processorName VARCHAR(255),
+          messageId VARCHAR(255), createdAt TIMESTAMP)
+      type: org.apache.camel.processor.idempotent.jdbc.JdbcMessageIdRepository
